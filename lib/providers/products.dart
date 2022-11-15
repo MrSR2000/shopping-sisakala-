@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../models/product.dart';
+import 'product.dart';
 
 class Products with ChangeNotifier {
   List<Product> _items = [
@@ -21,6 +21,14 @@ class Products with ChangeNotifier {
           'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Trousers%2C_dress_%28AM_1960.022-8%29.jpg/512px-Trousers%2C_dress_%28AM_1960.022-8%29.jpg',
     ),
     Product(
+      id: 'p3',
+      title: 'Red Scarf',
+      description: 'Warm and cozy - exactly what you need for the winter.',
+      price: 19.99,
+      imageUrl:
+          'https://cdn.shopify.com/s/files/1/0011/4651/9637/products/TS2--scarf_1_grande.png?v=1634826211',
+    ),
+    Product(
       id: 'p4',
       title: 'A Pan',
       description: 'Prepare any meal you want.',
@@ -28,21 +36,37 @@ class Products with ChangeNotifier {
       imageUrl:
           'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Cast-Iron-Pan.jpg/1024px-Cast-Iron-Pan.jpg',
     ),
-    Product(
-      id: 'p3',
-      title: 'Yellow Scarf',
-      description: 'Warm and cozy - exactly what you need for the winter.',
-      price: 19.99,
-      imageUrl:
-          'https://live.staticflickr.com/4043/4438260868_cc79b3369d_z.jpg',
-    ),
   ];
 
+  bool _showFavoritesOnly = false;
+
   List<Product> get items {
-    return [
-      ..._items
-    ]; //prefent adding and editing list from outside the classs
+    if (_showFavoritesOnly) {
+      return _items.where((prodItem) => prodItem.isFavorite == true).toList();
+    } else {
+      return [..._items];
+    }
+
+    //prefent adding and editing list from outside the classs
   }
+
+  List<Product> get favoriteItem {
+    return _items.where((prodItem) => prodItem.isFavorite == true).toList();
+  }
+
+  Product findById(String id) {
+    return _items.firstWhere((prod) => prod.id == id);
+  }
+
+  // void showFavoritesOnly() {
+  //   _showFavoritesOnly = true;
+  //   notifyListeners();
+  // }
+
+  // void showAll() {
+  //   _showFavoritesOnly = false;
+  //   notifyListeners();
+  // }
 
   void addProduct() {
     //_items.add(value);
