@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'product.dart';
 
 class Products with ChangeNotifier {
-  List<Product> _items = [
+  final List<Product> _items = [
     Product(
       id: 'p1',
       title: 'Red Shirt',
@@ -38,7 +38,7 @@ class Products with ChangeNotifier {
     ),
   ];
 
-  bool _showFavoritesOnly = false;
+  final bool _showFavoritesOnly = false;
 
   List<Product> get items {
     if (_showFavoritesOnly) {
@@ -68,8 +68,30 @@ class Products with ChangeNotifier {
   //   notifyListeners();
   // }
 
-  void addProduct() {
+  void addProduct(Product product) {
     //_items.add(value);
+
+    final newProduct = Product(
+      id: DateTime.now().toString(),
+      description: product.description,
+      imageUrl: product.imageUrl,
+      price: product.price,
+      title: product.title,
+    );
+    _items.add(newProduct);
+    notifyListeners();
+  }
+
+  void updateProduct(String id, Product newProduct) {
+    final prodIndex = _items.indexWhere((prod) => prod.id == id);
+
+    _items[prodIndex] = newProduct;
+  }
+
+  void deleteProducts(String id) {
+    _items.removeWhere(
+      (prod) => prod.id == id,
+    );
     notifyListeners();
   }
 }
