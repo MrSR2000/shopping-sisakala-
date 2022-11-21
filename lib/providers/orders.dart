@@ -1,5 +1,6 @@
 import 'dart:collection';
-
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import './cart.dart';
@@ -25,17 +26,70 @@ class Order with ChangeNotifier {
     return [..._orders];
   }
 
-  void addOrder(List<CartItem> cartProducts, double total) {
+  Future<void> addOrder(List<CartItem> cartProducts, double total) async {
+    final timeStamp = DateTime.now();
+    final response = await http.post(
+      Uri.parse(
+          'https://sisakala-645ac-default-rtdb.firebaseio.com/orders.json'),
+      body: json.encode(
+        {
+          'amount': total,
+          'products': cartProducts
+              .map((cp) => {
+                    'id': cp.id,
+                    'title': cp.title,
+                    'quantity': cp.quantity,
+                    'price': cp.price,
+                  })
+              .toList(),
+          'dateTime': timeStamp.toIso8601String(),
+        },
+      ),
+    );
     _orders.insert(
       0,
       OrderItem(
-        id: DateTime.now().toString(),
+        id: json.decode(response.body)['name'],
         amount: total,
         products: cartProducts,
-        dateTime: DateTime.now(),
+        dateTime: timeStamp,
       ),
     );
 
+    notifyListeners();
+  }
+
+  Future<void> fetchAndSetOrders() async {
+    List<OrderItem> loadedOrders = [];
+    final response = await http.get(
+      Uri.parse(
+          'https://sisakala-645ac-default-rtdb.firebaseio.com/orders.json'),
+    );
+    print(json.decode(response.body));
+    final extractedOrders = json.decode(response.body) as Map<String, dynamic>;
+    if (extractedOrders == null) {
+      return;
+    }
+    extractedOrders.forEach((orderId, orderData) {
+      loadedOrders.add(
+        OrderItem(
+          id: orderId,
+          amount: orderData['amount'],
+          products: (orderData['products'] as List<dynamic>)
+              .map(
+                (item) => CartItem(
+                  id: item['id'],
+                  title: item['title'],
+                  quantity: item['quantity'],
+                  price: item['price'],
+                ),
+              )
+              .toList(),
+          dateTime: DateTime.parse(orderData['dateTime']),
+        ),
+      );
+    });
+    _orders = loadedOrders.reversed.toList();
     notifyListeners();
   }
 }

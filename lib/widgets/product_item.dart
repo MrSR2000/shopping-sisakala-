@@ -25,7 +25,9 @@ class ProductItem extends StatelessWidget {
                 product.isFavorite ? Icons.favorite : Icons.favorite_outline,
                 color: Theme.of(context).accentColor,
               ),
-              onPressed: () => product.toggleFavoriteStatus(),
+              onPressed: () {
+                product.toggleFavoriteStatus();
+              },
             ),
           ),
           title: Text(
@@ -66,7 +68,7 @@ class ProductItem extends StatelessWidget {
           },
           child: Image.network(
             product.imageUrl,
-            fit: BoxFit.cover,
+            fit: BoxFit.contain,
           ),
         ),
       ),
