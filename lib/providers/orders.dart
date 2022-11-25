@@ -1,4 +1,3 @@
-import 'dart:collection';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -21,6 +20,10 @@ class OrderItem {
 
 class Order with ChangeNotifier {
   List<OrderItem> _orders = [];
+  final String authToken;
+  final String userId;
+
+  Order(this.authToken, this.userId, this._orders);
 
   List<OrderItem> get orders {
     return [..._orders];
@@ -30,7 +33,7 @@ class Order with ChangeNotifier {
     final timeStamp = DateTime.now();
     final response = await http.post(
       Uri.parse(
-          'https://sisakala-645ac-default-rtdb.firebaseio.com/orders.json'),
+          'https://sisakala-645ac-default-rtdb.firebaseio.com/orders/$userId.json?auth=$authToken'),
       body: json.encode(
         {
           'amount': total,
@@ -63,10 +66,11 @@ class Order with ChangeNotifier {
     List<OrderItem> loadedOrders = [];
     final response = await http.get(
       Uri.parse(
-          'https://sisakala-645ac-default-rtdb.firebaseio.com/orders.json'),
+          'https://sisakala-645ac-default-rtdb.firebaseio.com/orders/$userId.json?auth=$authToken'),
     );
     print(json.decode(response.body));
-    final extractedOrders = json.decode(response.body) as Map<String, dynamic>;
+    final Map? extractedOrders =
+        json.decode(response.body) as Map<String, dynamic>;
     if (extractedOrders == null) {
       return;
     }

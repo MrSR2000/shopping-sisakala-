@@ -12,15 +12,14 @@ enum FilterOptions {
   All,
 }
 
-bool _isInit = true;
-bool _isLoading = false;
-
 class ProductOverviewScreen extends StatefulWidget {
   @override
   State<ProductOverviewScreen> createState() => _ProductOverviewScreenState();
 }
 
 class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
+  var _isInit = true;
+  bool _isLoading = false;
   var _showOnlyFavorites = false;
 
   @override
@@ -36,11 +35,12 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
 
   @override
   void didChangeDependencies() {
+    //print('did change dependency ran');
     if (_isInit) {
       setState(() {
         _isLoading = true;
       });
-      Provider.of<Products>(context).fetchAndSetProducts().then(
+      Provider.of<Products>(context).fetchAndSetProducts(false).then(
         (_) {
           setState(() {
             _isLoading = false;

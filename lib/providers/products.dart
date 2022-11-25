@@ -42,6 +42,11 @@ class Products with ChangeNotifier {
     // ),
   ];
 
+  final String authToken;
+  final String userId;
+
+  Products(this.authToken, this.userId, this._items);
+
   final bool _showFavoritesOnly = false;
 
   List<Product> get items {
@@ -63,7 +68,7 @@ class Products with ChangeNotifier {
   }
 
   // void showFavoritesOnly() {
-  //   _showFavoritesOnly = true;
+  //   _showFavoritesOnly = true;lib/providers/products.dart
   //   notifyListeners();
   // }
 
@@ -79,7 +84,7 @@ class Products with ChangeNotifier {
       //store in web server
       final response = await http.post(
         Uri.parse(
-            'https://sisakala-645ac-default-rtdb.firebaseio.com/products.json'),
+            'https://sisakala-645ac-default-rtdb.firebaseio.com/products.json?auth=$authToken'),
         body: jsonEncode(
           {
             'title': product.title,
@@ -87,6 +92,7 @@ class Products with ChangeNotifier {
             'imageUrl': product.imageUrl,
             'price': product.price,
             'isFavorite': product.isFavorite,
+            'creatorId': userId,
           },
         ),
       );
@@ -111,7 +117,7 @@ class Products with ChangeNotifier {
     final prodIndex = _items.indexWhere((prod) => prod.id == id);
     await http.patch(
       Uri.parse(
-          'https://sisakala-645ac-default-rtdb.firebaseio.com/products/$id.json'),
+          'https://sisakala-645ac-default-rtdb.firebaseio.com/products/$id.json?auth=$authToken'),
       body: json.encode(
         {
           'title': newProduct.title,
@@ -134,7 +140,7 @@ class Products with ChangeNotifier {
     notifyListeners();
     final response = await http.delete(
       Uri.parse(
-          'https://sisakala-645ac-default-rtdb.firebaseio.com/products/$id.json'),
+          'https://sisakala-645ac-default-rtdb.firebaseio.com/products/$id.json?auth=$authToken'),
     );
 
     if (response.statusCode >= 400) {
@@ -145,18 +151,27 @@ class Products with ChangeNotifier {
     existingProduct = null;
   }
 
-  Future<void> fetchAndSetProducts() async {
+  Future<void> fetchAndSetProducts([bool filterByUser = false]) async {
+    final filterString =
+        filterByUser ? 'orderBy="creatorId"&equalTo="$userId"' : '';
     try {
+      //print('filterString = $filterString');
       final response = await http.get(
         Uri.parse(
-            'https://sisakala-645ac-default-rtdb.firebaseio.com/products.json'),
+            'https://sisakala-645ac-default-rtdb.firebaseio.com/products.json?auth=$authToken&$filterString'),
       );
       //print(json.decode(response.body));
-      final extractedData = json.decode(response.body) as Map<String, dynamic>;
-      final List<Product> loadedProducts = [];
+      final Map<String, dynamic>? extractedData =
+          json.decode(response.body) as Map<String, dynamic>;
       if (extractedData == null) {
         return;
       }
+      final favoriteResponse = await http.get(Uri.parse(
+          'https://sisakala-645ac-default-rtdb.firebaseio.com/userFavorites/$userId.json?auth=$authToken'));
+      final favoriteData = json.decode(favoriteResponse.body);
+      //print(favoriteData);
+
+      final List<Product> loadedProducts = [];
       extractedData.forEach(
         (prodId, prodData) {
           loadedProducts.add(
@@ -166,7 +181,9 @@ class Products with ChangeNotifier {
               description: prodData['description'],
               price: prodData['price'],
               imageUrl: prodData['imageUrl'],
-              isFavorite: prodData['isFavorite'],
+              isFavorite: favoriteData == null
+                  ? false
+                  : favoriteData['isFavorite'] ?? false,
             ),
           );
         },
